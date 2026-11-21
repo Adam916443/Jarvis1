@@ -15,6 +15,9 @@ jobs:
           java-version: 17
       - name: Install NDK and CMake
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null; "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.0.12077973" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0"
+      - name: Unit tests (informational)
+        continue-on-error: true
+        run: chmod +x gradlew && ./gradlew --no-daemon testDebugUnitTest
       - name: Build debug APK (carries the Hey Jarvis models)
         run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4

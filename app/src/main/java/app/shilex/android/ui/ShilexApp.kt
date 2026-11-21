@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.shilex.android.assistant.AssistantViewModel
 import app.shilex.android.assistant.UiState
@@ -36,6 +38,7 @@ import app.shilex.android.task.Task
 
 private enum class Tab(val label: String, val icon: ImageVector) {
     Home("Home", Icons.Filled.Home),
+    Remember("Remember", Icons.Filled.Favorite),
     Automations("Automations", Icons.Filled.Star),
     Activity("Activity", Icons.Filled.List),
     Settings("Settings", Icons.Filled.Settings),
@@ -91,7 +94,7 @@ private fun Content(
                         selected = tab == it.ordinal,
                         onClick = { setTab(it.ordinal) },
                         icon = { Icon(it.icon, contentDescription = null) },
-                        label = { Text(it.label.uppercase(), style = MaterialTheme.typography.labelMedium, maxLines = 1) },
+                        label = { Text(it.label.uppercase(), style = MaterialTheme.typography.labelMedium.copy(fontSize = 9.sp, letterSpacing = 0.5.sp), maxLines = 1) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -120,6 +123,7 @@ private fun Content(
                     onSeeActivity = { setTab(Tab.Activity.ordinal) },
                     favourites = remember(activity.size) { assistant.favourites() },
                 )
+                Tab.Remember -> MemoryScreen()
                 Tab.Automations -> AutomationsScreen()
                 Tab.Activity -> ActivityScreen(activity, assistant::clearActivity)
                 Tab.Settings -> SettingsScreen(assistant)

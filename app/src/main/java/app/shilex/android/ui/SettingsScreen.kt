@@ -227,7 +227,7 @@ fun SettingsScreen(assistant: AssistantViewModel) {
             }
             InfoRow(
                 "What ${Branding.ASSISTANT_NAME} remembers",
-                "$notes note(s) you asked it to remember, kept on this phone only. Gemini sees one only when you ask about it.",
+                "$notes memory node(s) you added or ${Branding.ASSISTANT_NAME} saved for you (see the Remember tab), kept on this phone only. Gemini sees one only when you ask about it.",
             ) {
                 if (notes > 0) TextButton(onClick = { memory.clearNotes().also { notes = 0 } }) { Text("Forget all") }
             }

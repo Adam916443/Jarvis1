@@ -22,8 +22,9 @@ object MemoryTools {
 
         override fun declaration() = Schema.function(
             name,
-            "Saves a short note the user asked to remember (where they parked, a size, a name). Never passwords, PINs, OTPs or card numbers.",
-            Schema.string("note", "The note in the user's words, short and self-contained.", required = true),
+            "Saves something to remember (a name, where something is, a size, a preference). Never passwords, PINs, OTPs or card numbers. " +
+                "Same label again replaces the old value.",
+            Schema.string("note", "Best as 'label → value' in the user's own language, e.g. \"mom's name → Heba\" or \"اسم أمي → هبة\". Short.", required = true),
         )
 
         override suspend fun run(args: JSONObject, host: ToolHost): JSONObject {

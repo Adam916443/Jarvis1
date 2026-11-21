@@ -1,6 +1,7 @@
 package app.shilex.android.memory
 
 import android.content.Context
+import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -15,9 +16,24 @@ class MemoryStore(context: Context) {
         (0 until a.length()).mapNotNull { i -> a.optJSONObject(i)?.let { Note(it.optString("t"), it.optLong("at")) } }
     }
 
+    /** Saves a note; a "label → value" note replaces an older one with the same label. */
     fun addNote(text: String) {
-        val kept = (notes() + Note(text, System.currentTimeMillis())).takeLast(MemoryRules.MAX_NOTES)
-        saveNotes(kept)
+        val label = MemoryRules.split(text)?.first?.let(MemoryRules::key)
+        val kept = if (label.isNullOrEmpty()) {
+            notes()
+        } else {
+            notes().filterNot { n -> MemoryRules.split(n.text)?.first?.let(MemoryRules::key) == label }
+        }
+        saveNotes((kept + Note(text, System.currentTimeMillis())).takeLast(MemoryRules.MAX_NOTES))
+    }
+
+    fun remove(note: Note) = saveNotes(notes() - note)
+
+    /** Calls [onChange] (on the main thread) whenever notes change, even from the voice tools. Returns the stop function. */
+    fun observe(onChange: () -> Unit): () -> Unit {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key -> if (key == NOTES) onChange() }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
     /** Removes the notes matching [query] (all of them for "all"); returns how many. */

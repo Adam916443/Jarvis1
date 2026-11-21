@@ -20,12 +20,23 @@ object MemoryRules {
     private val STOP = setOf(
         "the", "a", "an", "my", "i", "is", "was", "where", "what", "did", "do", "to", "of", "in", "on", "at",
         "that", "this", "me", "remember", "about", "kya", "kaha", "kahan", "hai", "tha", "mera", "meri", "ka", "ki", "ke",
+        "ايه", "إيه", "هو", "هي", "في", "فين", "من", "يا", "ده", "دي", "بتاع", "بتاعي",
     )
+    const val ARROW = " → "
 
     const val MAX_NOTES = 200
     const val MAX_LENGTH = 300
     const val MAX_ROUTINES = 20
     const val MAX_STEPS = 10
+
+    /** "mom's name → Heba" as (label, value); null for a note that is just free text. */
+    fun split(text: String): Pair<String, String>? {
+        val i = text.indexOf(ARROW)
+        if (i <= 0) return null
+        val label = text.substring(0, i).trim()
+        val value = text.substring(i + ARROW.length).trim()
+        return if (label.isEmpty() || value.isEmpty()) null else label to value
+    }
 
     fun looksSecret(text: String) = SECRET_WORDS.containsMatchIn(text) || CARD.containsMatchIn(text)
 
