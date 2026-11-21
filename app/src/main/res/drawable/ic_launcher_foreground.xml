@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- JARVIS mark: arc-reactor rings and core. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#FF00E5FF"
+        android:strokeWidth="2"
+        android:strokeAlpha="0.5"
+        android:pathData="M54,26a28,28 0 1,0 0.01,0z" />
+    <path
+        android:strokeColor="#FF00E5FF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M54,32A22,22 0 0,1 73,43" />
+    <path
+        android:strokeColor="#FF00E5FF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M73,65A22,22 0 0,1 35,65" />
+    <path
+        android:strokeColor="#FF00E5FF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M35,43A22,22 0 0,1 54,32" />
+    <path
+        android:strokeColor="#FFE6FBFF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,46L63,61L45,61z" />
+    <path
+        android:fillColor="#FFE6FBFF"
+        android:pathData="M54,54a2.5,2.5 0 1,0 0.01,0z" />
+</vector>
