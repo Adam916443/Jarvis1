@@ -131,7 +131,7 @@ object HabitKeys {
         LocalCommand.Date -> "date"
         is LocalCommand.Timer -> "timer:${command.seconds}"
         is LocalCommand.OpenApp -> "app:${command.name.lowercase()}"
-        is LocalCommand.Alarm, LocalCommand.Stop -> null // one-off times; nothing to learn
+        is LocalCommand.Alarm, LocalCommand.Stop, LocalCommand.StudyLock -> null // one-off times; nothing to learn
     }
 
     fun command(key: String): LocalCommand? {

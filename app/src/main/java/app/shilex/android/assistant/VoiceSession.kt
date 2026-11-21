@@ -21,6 +21,7 @@ import app.shilex.android.live.LiveClient
 import app.shilex.android.live.LiveEvent
 import app.shilex.android.learn.Habits
 import app.shilex.android.live.LiveProtocol
+import app.shilex.android.study.StudyLock
 import app.shilex.android.task.TaskTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -126,6 +127,7 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
 
     /** Call only after the mic is allowed. [firstText], heard or typed, goes to Gemini as the user's turn. */
     fun start(firstText: String? = null) {
+        if (StudyLock.active) StudyLock.stop(app) // starting a session on purpose (mic tap, typed text) ends student lock
         // Typed during a session (floating orb): send now, or once connected.
         if (wanted && firstText != null) return tools.userSpoke(firstText).also {
             if (_state.value.phase == Phase.Connecting) pendingText = firstText else client.send(LiveProtocol.userTextMessage(firstText))
@@ -186,6 +188,19 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
         transcript.endTurn()
         _state.update { it.copy(phase = Phase.Off) }
         _level.value = 0f
+    }
+
+    private var stopJob: Job? = null
+
+    /** "Jarvis stop" as a whole sentence ends the conversation, after a beat in case more words follow. */
+    private fun watchForStop() {
+        stopJob?.cancel()
+        val said = _state.value.lines.lastOrNull()?.takeIf { it.fromUser }?.text ?: return
+        if (!StopPhrase.matches(said)) return
+        stopJob = scope.launch {
+            delay(900)
+            if (wanted) stop("user said stop")
+        }
     }
 
     private fun loudness(level: Int) = (level / LOUD_LEVEL).coerceIn(0f, 1f)
@@ -285,6 +300,7 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
                 heardUser = true
                 tools.userSpoke(event.text)
                 _state.update { it.copy(lines = transcript.add(fromUser = true, event.text)) }
+                watchForStop()
             }
             is LiveEvent.AssistantText -> if (!droppingReply) {
                 lastActivity = SystemClock.elapsedRealtime()

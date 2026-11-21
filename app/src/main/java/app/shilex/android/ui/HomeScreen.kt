@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import androidx.core.content.ContextCompat
 import app.shilex.android.Branding
 import app.shilex.android.assistant.Line
 import app.shilex.android.assistant.Phase
+import app.shilex.android.study.StudyLock
 import app.shilex.android.assistant.UiState
 import app.shilex.android.learn.HabitKeys
 import app.shilex.android.local.ActivityLog
@@ -119,6 +122,11 @@ fun HomeScreen(
                 color = Accent,
                 modifier = Modifier.weight(1f),
             )
+            val studyOn by StudyLock.on.collectAsStateWithLifecycle()
+            if (studyOn) {
+                Pill("Study lock", Warning)
+                androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+            }
             Pill(now.badge, if (now.live) Accent else Muted)
         }
 

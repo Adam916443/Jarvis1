@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 
 /** System instructions for the phone. Versioned so behaviour changes are reviewable. */
 object Instructions {
-    const val VERSION = 10
+    const val VERSION = 11
 
     private val LANGUAGE = mapOf(
         "auto" to "Reply in the same language mix the user speaks (English, Hindi or Hinglish).",
@@ -66,6 +66,9 @@ object Instructions {
           Heba"), then say "Noted" in a few words. Not for passing remarks or one-off plans.
           Before answering anything about their people, things or habits, recall first. Routines: a routine's name ("good morning") is routine_run, then do its
           steps in order with the tools; "make a routine …" is routine_save.
+        - Student lock: "student lock", "study mode" or "قفل المذاكرة" is student_lock. After it
+          say one very short confirmation and nothing more; the assistant then stays silent
+          until the user says "Hey Jarvis" and then "talk".
         - Replying hands-free: a message with [reply N] can be answered without opening the
           app. reply_prepare with the user's exact words, say the returned line word for word,
           stop and wait; call reply_send only after the user answers yes in their own words.

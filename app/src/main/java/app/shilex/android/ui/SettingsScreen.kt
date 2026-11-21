@@ -30,6 +30,7 @@ import app.shilex.android.data.Settings as AppSettings
 import app.shilex.android.memory.MemoryStore
 import app.shilex.android.notify.NotificationWatch
 import app.shilex.android.orb.FloatingOrb
+import app.shilex.android.study.StudyLock
 import app.shilex.android.wake.WakeWordModel
 
 @Composable
@@ -105,6 +106,28 @@ fun SettingsScreen(assistant: AssistantViewModel) {
                     )
                 }
                 FloatingOrb.sync(context)
+            }
+        }
+
+        Section("Student lock") {
+            val studyOn by StudyLock.on.collectAsStateWithLifecycle()
+            var usageOk by remember { mutableStateOf(StudyLock.usageAllowed(context)) }
+            LifecycleResumeEffect(Unit) {
+                usageOk = StudyLock.usageAllowed(context)
+                onPauseOrDispose { }
+            }
+            SwitchRow(
+                "Student lock",
+                "Say \"Hey Jarvis, student lock\" (or switch it on here). ${Branding.ASSISTANT_NAME} then stays completely silent, even if you ask it " +
+                    "something, until you say \"Hey Jarvis\" and then \"talk\", or tap the mic.",
+                studyOn,
+            ) { on -> if (on) StudyLock.start(context) else StudyLock.stop(context) }
+            InfoRow(
+                "Keep me in my app",
+                (if (usageOk) "On. " else "Needs Usage access. ") +
+                    "If you leave the app you were in when you turned student lock on, ${Branding.ASSISTANT_NAME} says \"Go back to …\" until you return.",
+            ) {
+                TextButton(onClick = { open(Settings.ACTION_USAGE_ACCESS_SETTINGS) }) { Text(if (usageOk) "Change" else "Allow") }
             }
         }
 

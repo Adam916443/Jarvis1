@@ -47,6 +47,7 @@ class LocalActions(private val context: Context) {
         is LocalCommand.Alarm -> alarm(command)
         is LocalCommand.OpenApp -> openApp(command.name)
         LocalCommand.Stop -> LocalResult("Okay.")
+        LocalCommand.StudyLock -> LocalResult(app.shilex.android.study.StudyLock.start(context))
     }
 
     private fun setVolume(percent: Int): LocalResult {

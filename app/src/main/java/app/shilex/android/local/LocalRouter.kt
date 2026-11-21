@@ -15,6 +15,8 @@ sealed interface LocalCommand {
     data class Alarm(val hour: Int, val minute: Int, val period: Period?) : LocalCommand
     data class OpenApp(val name: String) : LocalCommand
     data object Stop : LocalCommand
+    /** "Student lock": go completely quiet until the user says Hey Jarvis, talk. */
+    data object StudyLock : LocalCommand
 }
 
 enum class MediaKey { Play, Pause, Next, Previous }
@@ -35,7 +37,7 @@ object LocalRouter {
         val s = normalize(text)
         if (s.isEmpty()) return null
         if (MORE.containsMatchIn(s)) return null // several requests or a message: Gemini's job
-        return stop(s) ?: timer(s) ?: alarm(s) ?: torch(s) ?: volume(s) ?: mute(s) ?: media(s) ?: battery(s) ?: time(s)
+        return studyLock(s) ?: stop(s) ?: timer(s) ?: alarm(s) ?: torch(s) ?: volume(s) ?: mute(s) ?: media(s) ?: battery(s) ?: time(s)
             ?: openApp(s)
     }
 
@@ -74,6 +76,9 @@ object LocalRouter {
     }
 
     private fun has(s: String, vararg words: String) = words.any { Regex("\\b$it\\b").containsMatchIn(s) }
+
+    private fun studyLock(s: String) =
+        if (STUDY.matches(s)) LocalCommand.StudyLock else null
 
     private fun stop(s: String) = if (s in STOPS) LocalCommand.Stop else null
 
@@ -194,6 +199,8 @@ object LocalRouter {
     )
     private val MORE = Regex("\\b(and|aur|then|phir|message|msg|call|bhejo|send|search|whatsapp pe|on whatsapp)\\b.*\\b\\w+")
     private val NOT_APPS = setOf("timer", "alarm", "music", "torch", "flashlight", "song", "gaana")
+    // The offline recogniser often hears "lock" as "look" or "luck".
+    private val STUDY = Regex("^(start |turn on |enable |activate )?(student|students|study|studying) (lock|look|luck|log|locked|mode)( on)?$")
     private val OPEN_FIRST = Regex("^(open|launch|start|kholo|khol)\\s+(.+)$")
     private val OPEN_LAST = Regex("^(.+?)\\s+(kholo|khol|kholiye|open|chalu|chalao|start|launch)$")
 }

@@ -18,6 +18,9 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import app.shilex.android.study.StudyLock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -118,6 +121,12 @@ class VoiceService : Service() {
             return
         }
         if (locked) Diag.i("wake: phone locked, answering with harmless tools only")
+        if (StudyLock.active) {
+            // No beep, no voice: a short buzz says it heard you, then it waits for "talk".
+            runCatching { getSystemService(Vibrator::class.java).vibrate(VibrationEffect.createOneShot(60, VibrationEffect.DEFAULT_AMPLITUDE)) }
+            if (!LocalTurn.get(this).start(silent = true)) Diag.i("study: no offline speech, staying silent")
+            return
+        }
         runCatching { ToneGenerator(AudioManager.STREAM_SYSTEM, 70).startTone(ToneGenerator.TONE_PROP_BEEP, 150) }
         if (Settings(this).localCommands && LocalTurn.get(this).start()) return
         VoiceSession.get(this).start()

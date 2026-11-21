@@ -38,7 +38,7 @@ object MessageWatch {
 
     /** Called by [NotificationWatch] for every new notification. */
     fun posted(context: Context, n: Seen) {
-        if (!watching || n.packageName == context.packageName) return
+        if (!watching || n.packageName == context.packageName || app.shilex.android.study.StudyLock.active) return
         val audio = context.getSystemService(AudioManager::class.java)
         val silent = audio.ringerMode != AudioManager.RINGER_MODE_NORMAL
         val line = rules.decide(n, System.currentTimeMillis(), silent, VoiceSession.get(context).active) ?: return

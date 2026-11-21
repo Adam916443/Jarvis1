@@ -2,6 +2,7 @@ package app.shilex.android
 
 import android.app.Application
 import app.shilex.android.orb.FloatingOrb
+import app.shilex.android.study.StudyLock
 
 /**
  * Starts the diagnostic log file before any screen, service or receiver runs, and brings the
@@ -13,5 +14,6 @@ class App : Application() {
         super.onCreate()
         Diag.start(DiagFile(filesDir))
         FloatingOrb.sync(this)
+        StudyLock.restore(this)
     }
 }

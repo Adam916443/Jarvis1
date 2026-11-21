@@ -19,6 +19,7 @@ import app.shilex.android.assistant.VoiceSession
 import app.shilex.android.audio.MusicPause
 import app.shilex.android.data.Settings
 import app.shilex.android.learn.Habits
+import app.shilex.android.study.StudyLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,14 +70,16 @@ class LocalTurn private constructor(private val context: Context) {
     }
 
     /** True if this turn took over; false means the caller should start Gemini as before. */
-    fun start(): Boolean {
+    fun start(silent: Boolean = false): Boolean {
         if (active) return true
         val kind = recogniser() ?: return false.also { Diag.i("local: no allowed speech recogniser, using Gemini") }
         active = true
         _phase.value = LocalPhase.Listening
         VoiceService.start(context) // stops the wake listener so the recogniser gets the mic
-        musicPause.pause()
-        warmUpVoice()
+        if (!silent) {
+            musicPause.pause()
+            warmUpVoice()
+        }
         main.postDelayed({ listen(kind) }, MIC_HANDOVER_MS)
         return true
     }
@@ -144,6 +147,19 @@ class LocalTurn private constructor(private val context: Context) {
     }
 
     private fun handle(texts: List<String>) {
+        // Student lock: no sound at all, whatever is asked, unless the user says talk.
+        if (StudyLock.active) {
+            if (StudyLock.isUnlock(texts)) {
+                StudyLock.stop(context)
+                active = false
+                _phase.value = LocalPhase.Idle
+                VoiceSession.get(context).start(firstText = "Student lock is now off. Say hello in three words.")
+            } else {
+                Diag.i("study: heard something, staying silent")
+                finish()
+            }
+            return
+        }
         // Phrases learned from earlier Gemini fallbacks run locally too.
         val command = LocalRouter.match(texts) ?: habits()?.lookup(texts)
         _phase.value = LocalPhase.Doing
@@ -245,6 +261,7 @@ class LocalTurn private constructor(private val context: Context) {
             is LocalCommand.Alarm -> "Alarm"
             is LocalCommand.OpenApp -> "Open ${command.name}"
             LocalCommand.Stop -> "Stop"
+            LocalCommand.StudyLock -> "Student lock"
         }
 
         private const val MIC_HANDOVER_MS = 300L
