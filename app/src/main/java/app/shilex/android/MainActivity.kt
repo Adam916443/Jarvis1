@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
-        setContent { ShilexApp(assistant) }
+        setContent { app.shilex.android.ui.ProvideTilt { ShilexApp(assistant) } }
         if (savedInstanceState == null) listenIfAsked(intent)
     }
 

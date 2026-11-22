@@ -272,6 +272,7 @@ private fun NodeCard(note: Note, index: Int, fresh: Boolean, onEdit: () -> Unit,
         Row(
             Modifier
                 .fillMaxWidth()
+                .holoTilt(4f)
                 .height(IntrinsicSize.Min)
                 .background(lerp(Surface.copy(alpha = 0.85f), accent.copy(alpha = 0.25f), glow.value), MaterialTheme.shapes.small)
                 .border(1.dp, lerp(outline, accent, glow.value), MaterialTheme.shapes.small)

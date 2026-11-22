@@ -55,6 +55,13 @@ import app.shilex.android.assistant.Phase
 import app.shilex.android.study.StudyLock
 import app.shilex.android.assistant.UiState
 import app.shilex.android.learn.HabitKeys
+import app.shilex.android.learn.Habits
+import app.shilex.android.vision.VisionActivity
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.TextButton
+import app.shilex.android.data.Settings as AppSettings
 import app.shilex.android.local.ActivityLog
 import app.shilex.android.local.LocalCommand
 import app.shilex.android.local.LocalPhase
@@ -172,6 +179,9 @@ fun HomeScreen(
         if (state.phase != Phase.Off && state.lines.isNotEmpty()) {
             Conversation(state.lines, Modifier.fillMaxWidth().weight(1f))
         } else {
+            VisionButton()
+            Spacer(Modifier.height(10.dp))
+            Suggestion(onQuick)
             QuickActions(onQuick, favourites)
             Spacer(Modifier.height(16.dp))
             Recent(activity.take(2), onSeeActivity)
@@ -191,6 +201,60 @@ fun HomeScreen(
                 Icon(if (live) Icons.Filled.Close else MicIcon, contentDescription = if (live) "Stop" else "Talk", modifier = Modifier.size(30.dp))
             }
         }
+    }
+}
+
+/** Opens the camera screen where the assistant looks at what you point at. */
+@Composable
+private fun VisionButton() {
+    val context = LocalContext.current
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .holoTilt(3f)
+            .background(Accent.copy(alpha = 0.10f), MaterialTheme.shapes.small)
+            .border(1.dp, Accent.copy(alpha = 0.7f), MaterialTheme.shapes.small)
+            .clickable { context.startActivity(Intent(context, VisionActivity::class.java)) }
+            .padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("◉  VISION · POINT THE CAMERA", style = MaterialTheme.typography.labelLarge, color = Accent)
+    }
+}
+
+/** Something learned from your habits: what you usually do around now. */
+@Composable
+private fun Suggestion(onQuick: (LocalCommand) -> String) {
+    val context = LocalContext.current
+    var suggestion by remember { mutableStateOf<LocalCommand?>(null) }
+    var answer by remember { mutableStateOf<String?>(null) }
+    LifecycleResumeEffect(Unit) {
+        suggestion = if (AppSettings(context).learning) Habits.get(context).suggest(java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) else null
+        onPauseOrDispose { }
+    }
+    val command = suggestion ?: return
+    val words = HabitKeys.key(command)?.let { HabitKeys.describe(it) } ?: return
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+            .holoTilt(3f)
+            .background(Accent.copy(alpha = 0.05f), MaterialTheme.shapes.small)
+            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small)
+            .padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("YOU USUALLY DO THIS NOW", style = MaterialTheme.typography.labelMedium, color = Muted)
+            Text(answer ?: words.replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.titleMedium)
+        }
+        if (answer == null) {
+            TextButton(onClick = { answer = onQuick(command) }) { Text("DO IT", style = MaterialTheme.typography.labelLarge) }
+        }
+        TextButton(onClick = {
+            Habits.get(context).dismiss(command)
+            suggestion = null
+        }) { Text("✕", color = Muted) }
     }
 }
 

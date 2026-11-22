@@ -43,6 +43,7 @@ fun Section(title: String?, modifier: Modifier = Modifier, content: @Composable 
         Column(
             Modifier
                 .fillMaxWidth()
+                .holoTilt(3f)
                 .background(Surface.copy(alpha = 0.85f), MaterialTheme.shapes.medium)
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
                 .padding(horizontal = 16.dp, vertical = 6.dp),
@@ -122,31 +123,43 @@ val MicIcon: ImageVector by lazy {
     }.build()
 }
 
-/** A faint grid and four corner brackets behind a screen, like a HUD display. */
-fun Modifier.hudFrame(color: Color): Modifier = this.drawBehind {
-    val step = 28.dp.toPx()
-    val grid = color.copy(alpha = 0.05f)
-    var x = 0f
-    while (x < size.width) {
-        drawLine(grid, Offset(x, 0f), Offset(x, size.height), 1f)
-        x += step
+/** A faint grid and four corner brackets behind a screen, like a HUD display; they drift with the tilt. */
+@Composable
+fun Modifier.hudFrame(color: Color): Modifier {
+    val tilt = LocalTilt.current
+    return this.drawBehind {
+        val t = tilt.value
+        val step = 28.dp.toPx()
+        val grid = color.copy(alpha = 0.05f)
+        val gx = (t.x * 14.dp.toPx()) % step
+        val gy = (t.y * 14.dp.toPx()) % step
+        var x = gx - step
+        while (x < size.width) {
+            drawLine(grid, Offset(x, 0f), Offset(x, size.height), 1f)
+            x += step
+        }
+        var y = gy - step
+        while (y < size.height) {
+            drawLine(grid, Offset(0f, y), Offset(size.width, y), 1f)
+            y += step
+        }
+        val sx = -t.x * 6.dp.toPx()
+        val sy = -t.y * 6.dp.toPx()
+        val m = 10.dp.toPx()
+        val len = 22.dp.toPx()
+        val w = 2.dp.toPx()
+        val bracket = color.copy(alpha = 0.7f)
+        val l = m + sx
+        val r = size.width - m + sx
+        val tp = m + sy
+        val b = size.height - m + sy
+        drawLine(bracket, Offset(l, tp), Offset(l + len, tp), w)
+        drawLine(bracket, Offset(l, tp), Offset(l, tp + len), w)
+        drawLine(bracket, Offset(r, tp), Offset(r - len, tp), w)
+        drawLine(bracket, Offset(r, tp), Offset(r, tp + len), w)
+        drawLine(bracket, Offset(l, b), Offset(l + len, b), w)
+        drawLine(bracket, Offset(l, b), Offset(l, b - len), w)
+        drawLine(bracket, Offset(r, b), Offset(r - len, b), w)
+        drawLine(bracket, Offset(r, b), Offset(r, b - len), w)
     }
-    var y = 0f
-    while (y < size.height) {
-        drawLine(grid, Offset(0f, y), Offset(size.width, y), 1f)
-        y += step
-    }
-    val m = 10.dp.toPx()
-    val len = 22.dp.toPx()
-    val w = 2.dp.toPx()
-    val bracket = color.copy(alpha = 0.7f)
-    // top-left, top-right, bottom-left, bottom-right
-    drawLine(bracket, Offset(m, m), Offset(m + len, m), w)
-    drawLine(bracket, Offset(m, m), Offset(m, m + len), w)
-    drawLine(bracket, Offset(size.width - m, m), Offset(size.width - m - len, m), w)
-    drawLine(bracket, Offset(size.width - m, m), Offset(size.width - m, m + len), w)
-    drawLine(bracket, Offset(m, size.height - m), Offset(m + len, size.height - m), w)
-    drawLine(bracket, Offset(m, size.height - m), Offset(m, size.height - m - len), w)
-    drawLine(bracket, Offset(size.width - m, size.height - m), Offset(size.width - m - len, size.height - m), w)
-    drawLine(bracket, Offset(size.width - m, size.height - m), Offset(size.width - m, size.height - m - len), w)
 }

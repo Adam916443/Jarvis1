@@ -23,6 +23,8 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
     private val hours = mutableMapOf<String, IntArray>()
     private val phrases = mutableMapOf<String, String>()
     private var pending: Pair<String, Long>? = null
+    private val usedAt = mutableMapOf<String, Long>() // this run only: not suggested right after it was used
+    private val dismissedAt = mutableMapOf<String, Long>()
 
     init {
         load()
@@ -31,6 +33,7 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
     @Synchronized
     fun record(command: LocalCommand, hour: Int) {
         val key = HabitKeys.key(command) ?: return
+        usedAt[key] = clock()
         counts[key] = (counts[key] ?: 0) + 1
         hours.getOrPut(key) { IntArray(24) }[hour.coerceIn(0, 23)]++
         save()
@@ -58,6 +61,25 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
     @Synchronized
     fun lookup(alternatives: List<String>): LocalCommand? =
         alternatives.firstNotNullOfOrNull { phrases[LocalRouter.normalize(it)]?.let(HabitKeys::command) }
+
+    /**
+     * Something this user usually does around [hour] (at least [SUGGEST_MIN] times at this hour),
+     * not used in the last 3 hours and not dismissed in the last 12. Null when nothing fits.
+     */
+    @Synchronized
+    fun suggest(hour: Int): LocalCommand? {
+        val now = clock()
+        val h = hour.coerceIn(0, 23)
+        val key = hours.entries
+            .filter { (k, v) -> v[h] >= SUGGEST_MIN && now - (usedAt[k] ?: 0L) > 3 * HOUR_MS && now - (dismissedAt[k] ?: 0L) > 12 * HOUR_MS }
+            .maxByOrNull { it.value[h] }?.key ?: return null
+        return HabitKeys.command(key)
+    }
+
+    @Synchronized
+    fun dismiss(command: LocalCommand) {
+        HabitKeys.key(command)?.let { dismissedAt[it] = clock() }
+    }
 
     /** Most used first; commands used fewer than [min] times are left out. */
     @Synchronized
@@ -106,6 +128,8 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
     }
 
     companion object {
+        private const val SUGGEST_MIN = 3
+        private const val HOUR_MS = 3_600_000L
         private const val LEARN_WINDOW_MS = 60_000L
         private const val MAX_PHRASES = 200
         private const val MAX_WORDS = 8

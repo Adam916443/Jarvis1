@@ -76,6 +76,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.okhttp)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
     // On-device wake word (openWakeWord ONNX models), MIT licence.
     implementation(libs.onnxruntime.android)
     // Offline speech for local commands (Vosk, Apache 2.0); the model comes from fetchVoskModel.

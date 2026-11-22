@@ -172,6 +172,11 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
         }
     }
 
+    /** A camera picture from the Vision screen, about one a second. */
+    fun sendFrame(jpeg: ByteArray) {
+        if (wanted && _state.value.phase != Phase.Connecting) client.send(LiveProtocol.videoMessage(jpeg))
+    }
+
     /** Ends the session; [reason] goes to the diagnostic log. */
     fun stop(reason: String) {
         if (wanted) Diag.i("session: stop ($reason)")

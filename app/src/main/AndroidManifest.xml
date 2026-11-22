@@ -22,6 +22,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Student lock: a short buzz instead of a beep, and noticing when you leave your study app. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Vision: the camera is on only while its screen is open. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
@@ -55,6 +58,11 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Shilex">
+        <activity
+            android:name=".vision.VisionActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
