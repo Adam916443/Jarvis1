@@ -193,15 +193,26 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
     private var stopJob: Job? = null
 
     /** "Jarvis stop" as a whole sentence ends the conversation, after a beat in case more words follow. */
-    private fun watchForStop() {
+    private fun watchForStop(piece: String) {
         stopJob?.cancel()
-        val said = _state.value.lines.lastOrNull()?.takeIf { it.fromUser }?.text ?: return
-        if (!StopPhrase.matches(said)) return
+        val now = SystemClock.elapsedRealtime()
+        synchronized(userWords) {
+            if (now - userWordsAt > 5_000) userWords.setLength(0) // a new sentence
+            userWordsAt = now
+            userWords.append(' ').append(piece)
+            if (!StopPhrase.matches(userWords.toString())) return
+        }
         stopJob = scope.launch {
-            delay(900)
-            if (wanted) stop("user said stop")
+            delay(800)
+            if (wanted) {
+                synchronized(userWords) { userWords.setLength(0) }
+                stop("user said stop")
+            }
         }
     }
+
+    private val userWords = StringBuilder()
+    private var userWordsAt = 0L
 
     private fun loudness(level: Int) = (level / LOUD_LEVEL).coerceIn(0f, 1f)
 
@@ -300,7 +311,7 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
                 heardUser = true
                 tools.userSpoke(event.text)
                 _state.update { it.copy(lines = transcript.add(fromUser = true, event.text)) }
-                watchForStop()
+                watchForStop(event.text)
             }
             is LiveEvent.AssistantText -> if (!droppingReply) {
                 lastActivity = SystemClock.elapsedRealtime()

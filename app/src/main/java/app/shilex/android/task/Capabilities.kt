@@ -42,6 +42,7 @@ object Capabilities {
         Capability("recall", "Look up a note", Risk.Low),
         Capability("forget", "Forget a note", Risk.Medium),
         Capability("student_lock", "Student lock", Risk.Low),
+        Capability("end_conversation", "End the conversation", Risk.Low),
         Capability("routine_save", "Save a routine", Risk.Low),
         Capability("routine_run", "Run a routine", Risk.Low),
         Capability("calendar_list", "Check calendar", Risk.Medium),
