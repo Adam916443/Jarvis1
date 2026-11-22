@@ -69,6 +69,7 @@ class KeyVault(context: Context) {
 
     companion object {
         const val GEMINI_KEY = "gemini_api_key"
+        const val TELEGRAM_TOKEN = "telegram_bot_token"
         private const val KEYSTORE = "AndroidKeyStore"
         private const val ALIAS = "shilex_vault"
         private const val TRANSFORMATION = "AES/GCM/NoPadding"

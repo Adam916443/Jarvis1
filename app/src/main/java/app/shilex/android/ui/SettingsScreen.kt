@@ -131,6 +131,10 @@ fun SettingsScreen(assistant: AssistantViewModel) {
             }
         }
 
+        Section("Telegram") {
+            TelegramSettings()
+        }
+
         Section("Notifications") {
             var notifyOn by remember { mutableStateOf(NotificationWatch.allowed(context)) }
             LifecycleResumeEffect(Unit) {

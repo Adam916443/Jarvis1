@@ -15,5 +15,6 @@ class App : Application() {
         Diag.start(DiagFile(filesDir))
         FloatingOrb.sync(this)
         StudyLock.restore(this)
+        app.shilex.android.telegram.TelegramBot.sync(this)
     }
 }

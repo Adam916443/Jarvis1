@@ -74,6 +74,8 @@ class ToolRunner(
     private val onScreen: () -> Boolean,
     private val note: (String) -> Unit,
     private val endSoon: () -> Unit,
+    /** Driven from Telegram: only [Capabilities.allowedRemotely] tools, whether or not the phone is locked. */
+    private val remote: Boolean = false,
 ) : ToolHost {
     private val tools = (
         CommsTools.all() + ClockTools.all() + ReminderTools.all() + MediaTools.all() + InfoTools.all() +
@@ -88,7 +90,8 @@ class ToolRunner(
     @Volatile private var pending: Pending? = null
 
     fun declarations(): JSONArray = JSONArray().apply {
-        tools.values.filter { Capabilities.of(it.name) != null }.forEach { put(it.declaration()) }
+        tools.values.filter { Capabilities.of(it.name) != null && (!remote || Capabilities.allowedRemotely(it.name)) }
+            .forEach { put(it.declaration()) }
     }
 
     fun handle(calls: List<FunctionCall>) {
@@ -102,7 +105,9 @@ class ToolRunner(
                 val clean = trust.mayLearn
                 val response = if (tool == null) {
                     Results.failed("unknown_tool", "There is no tool called ${call.name}.")
-                } else if (isLocked() && !Capabilities.allowedWhileLocked(call.name)) {
+                } else if (remote && !Capabilities.allowedRemotely(call.name)) {
+                    Results.failed("not_remote", "This can only be done on the phone itself. Tell the user to do it there.")
+                } else if (!remote && isLocked() && !Capabilities.allowedWhileLocked(call.name)) {
                     Diag.i("tool: ${call.name} held, phone is locked")
                     Results.failed(
                         "phone_locked",
@@ -271,6 +276,20 @@ class ToolRunner(
     }
 
     companion object {
+        /** A runner for Telegram messages: no screen, no apps opened, results handed to [done]. */
+        fun remote(context: Context, http: OkHttpClient, scope: CoroutineScope, done: (List<FunctionResult>) -> Unit) = ToolRunner(
+            context, http, scope,
+            answer = done,
+            askPermission = { },
+            onScreen = { false },
+            note = { },
+            endSoon = { },
+            remote = true,
+        )
+
+        fun remoteDeclarations(context: Context, http: OkHttpClient, scope: CoroutineScope): JSONArray =
+            remote(context, http, scope) { }.declarations()
+
         /** What the model is told after the user answered a permission request. */
         fun permissionNote(permission: String, granted: Boolean): String {
             val what = permission.substringAfterLast('.').replace('_', ' ').lowercase()

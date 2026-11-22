@@ -40,6 +40,15 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("wake_word", true)
         set(value) = prefs.edit().putBoolean("wake_word", value).apply()
 
+    /** Telegram bot control: on, and the one chat that may command JARVIS (0 = not paired). */
+    var telegramOn: Boolean
+        get() = prefs.getBoolean("telegram_on", false)
+        set(value) = prefs.edit().putBoolean("telegram_on", value).apply()
+
+    var telegramChat: Long
+        get() = prefs.getLong("telegram_chat", 0L)
+        set(value) = prefs.edit().putLong("telegram_chat", value).apply()
+
     /**
      * Answer "Hey Jarvis" while the phone is locked. Only harmless tools run then
      * (Capabilities.allowedWhileLocked); anything personal waits for the user to unlock.

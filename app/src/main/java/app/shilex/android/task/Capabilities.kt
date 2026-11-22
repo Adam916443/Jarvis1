@@ -78,5 +78,13 @@ object Capabilities {
 
     fun allowedWhileLocked(tool: String): Boolean = tool in lockedOk
 
+    /** What a Telegram message may do: harmless things only, nothing that opens apps or sends to other people. */
+    private val remoteOk = setOf(
+        "get_current_datetime", "get_weather", "set_alarm", "set_timer", "reminder_set", "reminders_list",
+        "remember", "recall", "media_control", "device_control", "notifications_check", "calendar_list",
+    )
+
+    fun allowedRemotely(tool: String): Boolean = tool in remoteOk
+
     val tools: Set<String> get() = all.keys
 }

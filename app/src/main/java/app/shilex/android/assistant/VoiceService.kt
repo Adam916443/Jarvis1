@@ -21,6 +21,7 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import app.shilex.android.study.StudyLock
+import app.shilex.android.telegram.TelegramBot
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -78,6 +79,7 @@ class VoiceService : Service() {
 
     /** Session running → session mode; else wake word if it's on; else stop. */
     fun update() {
+        TelegramBot.sync(this)
         if (setupActive) {
             wake.stop()
             return
@@ -93,6 +95,11 @@ class VoiceService : Service() {
             main.postDelayed({
                 if (!VoiceSession.get(this).active && !setupActive && !wake.start()) Diag.w("wake: couldn't start")
             }, MIC_HANDOVER_MS)
+            return
+        }
+        if (TelegramBot.wanted(this)) {
+            wake.stop()
+            show(telegramNotification())
             return
         }
         wake.stop()
@@ -151,6 +158,11 @@ class VoiceService : Service() {
 
     // Standby: Android requires a notification while the mic is on; this one stays silent,
     // folded at the bottom of the shade and out of the status bar.
+    private fun telegramNotification() = builder(STANDBY_CHANNEL)
+        .setContentTitle("${Branding.ASSISTANT_NAME} is listening on Telegram")
+        .setContentText("Only your paired chat can give it tasks.")
+        .build()
+
     private fun wakeNotification() = builder(STANDBY_CHANNEL)
         .setContentTitle("Say \"${WakeWordModel.PHRASE}\" to talk")
         .setContentText("Heard on this phone only; nothing is sent until you say it.")
@@ -193,6 +205,9 @@ class VoiceService : Service() {
 
         @Volatile private var instance: VoiceService? = null
 
+        /** Something needs the service running in the background: the wake word or Telegram control. */
+        fun keepAlive(context: Context): Boolean = wakeWordWanted(context) || TelegramBot.wanted(context)
+
         fun wakeWordWanted(context: Context): Boolean =
             Settings(context).wakeWord &&
                 WakeWordModel.available(context) &&
@@ -209,7 +224,7 @@ class VoiceService : Service() {
                 return
             }
             // Nothing to run; starting would oblige a notification Android then crashes without.
-            if (!VoiceSession.get(context).active && !LocalTurn.get(context).active && !wakeWordWanted(context)) return
+            if (!VoiceSession.get(context).active && !LocalTurn.get(context).active && !keepAlive(context)) return
             runCatching { ContextCompat.startForegroundService(context, Intent(context, VoiceService::class.java)) }
                 .onFailure { Diag.w("service: could not start (${it.javaClass.simpleName})") }
         }
