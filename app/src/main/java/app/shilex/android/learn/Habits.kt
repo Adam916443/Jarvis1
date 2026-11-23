@@ -18,7 +18,13 @@ import java.io.File
  *
  * Contact choices are never learned: a recipient is always asked, never guessed.
  */
-class Habits(private val file: File, private val clock: () -> Long = System::currentTimeMillis) {
+class Habits(
+    private val file: File,
+    private val clock: () -> Long = System::currentTimeMillis,
+    /** Turns the saved text into what goes on disk and back; the app seals it with the Keystore key. */
+    private val seal: (String) -> String? = { it },
+    private val unseal: (String) -> String? = { it },
+) {
     private val counts = mutableMapOf<String, Int>()
     private val hours = mutableMapOf<String, IntArray>()
     private val phrases = mutableMapOf<String, String>()
@@ -110,7 +116,8 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
     private fun load() {
         if (!file.exists()) return
         runCatching {
-            val root = JSONObject(file.readText())
+            val text = file.readText()
+            val root = JSONObject(unseal(text) ?: text.takeIf { it.startsWith("{") } ?: return)
             root.optJSONObject("counts")?.let { o -> o.keys().forEach { counts[it] = o.getInt(it) } }
             root.optJSONObject("hours")?.let { o ->
                 o.keys().forEach { k -> val a = o.getJSONArray(k); hours[k] = IntArray(24) { a.optInt(it) } }
@@ -124,7 +131,7 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
             .put("counts", JSONObject(counts as Map<*, *>))
             .put("hours", JSONObject().apply { hours.forEach { (k, v) -> put(k, org.json.JSONArray(v.toList())) } })
             .put("phrases", JSONObject(phrases as Map<*, *>))
-        runCatching { file.writeText(root.toString()) }
+        runCatching { seal(root.toString())?.let { file.writeText(it) } }
     }
 
     companion object {
@@ -134,10 +141,12 @@ class Habits(private val file: File, private val clock: () -> Long = System::cur
         private const val MAX_PHRASES = 200
         private const val MAX_WORDS = 8
 
+        private fun vaultOf(context: Context) = app.shilex.android.data.KeyVault(context.applicationContext)
+
         @Volatile private var instance: Habits? = null
 
         fun get(context: Context): Habits = instance ?: synchronized(this) {
-            instance ?: Habits(File(context.filesDir, "habits.json")).also { instance = it }
+            instance ?: Habits(File(context.filesDir, "habits.json"), seal = { v -> runCatching { vaultOf(context).seal(v) }.getOrNull() }, unseal = { v -> vaultOf(context).unseal(v) }).also { instance = it }
         }
     }
 }

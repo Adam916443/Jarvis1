@@ -31,6 +31,12 @@ class KeyVault(context: Context) {
         prefs.edit().remove(name).apply()
     }
 
+    /** Encrypts text with the phone's Keystore key (for data files and notes). Throws if the key is unusable. */
+    fun seal(plain: String): String = encrypt(plain)
+
+    /** Reverses [seal]; null when the text isn't sealed (or the key is gone). */
+    fun unseal(stored: String): String? = runCatching { decrypt(stored) }.getOrNull()
+
     private fun encrypt(plain: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey())

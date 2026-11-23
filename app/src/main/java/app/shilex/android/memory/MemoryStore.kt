@@ -11,6 +11,7 @@ import org.json.JSONObject
  */
 class MemoryStore(context: Context) {
     private val prefs = context.getSharedPreferences("memory", Context.MODE_PRIVATE)
+    private val vault = app.shilex.android.data.KeyVault(context)
 
     fun notes(): List<Note> = array(NOTES).let { a ->
         (0 until a.length()).mapNotNull { i -> a.optJSONObject(i)?.let { Note(it.optString("t"), it.optLong("at")) } }
@@ -68,17 +69,28 @@ class MemoryStore(context: Context) {
 
     private fun savedRoutines() = routines().filter { it !== MemoryRules.GOOD_MORNING }
 
-    private fun saveNotes(notes: List<Note>) = prefs.edit().putString(
+    private fun saveNotes(notes: List<Note>) = putSealed(
         NOTES,
         JSONArray(notes.map { JSONObject().put("t", it.text).put("at", it.atMillis) }).toString(),
-    ).apply()
+    )
 
-    private fun writeRoutines(routines: List<Routine>) = prefs.edit().putString(
+    private fun writeRoutines(routines: List<Routine>) = putSealed(
         ROUTINES,
         JSONArray(routines.map { JSONObject().put("name", it.name).put("steps", JSONArray(it.steps)) }).toString(),
-    ).apply()
+    )
 
-    private fun array(key: String) = runCatching { JSONArray(prefs.getString(key, "[]")) }.getOrDefault(JSONArray())
+    /** Notes are stored encrypted with the Keystore key; if encryption fails nothing is written in plain text. */
+    private fun putSealed(key: String, json: String) {
+        val sealed = runCatching { vault.seal(json) }.getOrNull() ?: return
+        prefs.edit().putString(key, sealed).apply()
+    }
+
+    private fun array(key: String): JSONArray {
+        val stored = prefs.getString(key, null) ?: return JSONArray()
+        // Older versions stored plain JSON; it is read once and rewritten sealed.
+        val json = vault.unseal(stored) ?: stored.takeIf { it.startsWith("[") }?.also { putSealed(key, it) } ?: return JSONArray()
+        return runCatching { JSONArray(json) }.getOrDefault(JSONArray())
+    }
 
     private companion object {
         const val NOTES = "notes"
