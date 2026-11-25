@@ -151,7 +151,7 @@ object ScreenTools {
             if (ControlRules.blocked(field.packageName?.toString().orEmpty())) return blocked("this app")
             if (!service.type(field, args.text("text"))) return Results.failed("type_failed", "Typing didn't work in that field.")
             if (args.optBoolean("submit", false)) {
-                val hint = (service.labelOf(field) + " " + field.viewIdResourceName.orEmpty() + " " + field.hintText.orEmpty()).lowercase()
+                val hint = (service.labelOf(field) + " " + field.viewIdResourceName.orEmpty() + " " + (field.hintText?.toString() ?: "")).lowercase()
                 val isSearch = listOf("search", "بحث", "find", "query").any { it in hint }
                 if (!isSearch) return Results.failed("not_search", "Typed it, but Enter is only used in search boxes. Tap the Send or Search button instead.")
                 if (!service.submit(field)) return Results.failed("submit_failed", "Typed it, but Search didn't go. Tap the search suggestion or button instead.")
