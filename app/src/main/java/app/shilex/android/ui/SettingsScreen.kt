@@ -63,6 +63,18 @@ fun SettingsScreen(assistant: AssistantViewModel) {
             }
         }
 
+        Section("Google Search") {
+            var searchOn by remember { mutableStateOf(AppSettings(context).googleSearch) }
+            SwitchRow(
+                "Search Google while answering",
+                "${Branding.ASSISTANT_NAME} looks things up (news, scores, prices) when you ask. Only the words of the question go to Google. Applies from the next conversation.",
+                searchOn,
+            ) { on ->
+                searchOn = on
+                AppSettings(context).googleSearch = on
+            }
+        }
+
         Section("Conversation") {
             var talkOn by remember { mutableStateOf(assistant.talkOver) }
             SwitchRow(

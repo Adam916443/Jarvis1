@@ -121,6 +121,11 @@ class ControlService : AccessibilityService() {
         return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
     }
 
+    /** Presses the keyboard's Enter/Search key in [node]; only API 30+ can. */
+    fun submit(node: AccessibilityNodeInfo): Boolean =
+        android.os.Build.VERSION.SDK_INT >= 30 &&
+            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
+
     fun focusedField(): AccessibilityNodeInfo? =
         rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.takeIf { it.isEditable }
 

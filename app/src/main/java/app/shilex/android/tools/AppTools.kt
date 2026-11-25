@@ -26,7 +26,7 @@ object AppMatch {
 
 /** Opening any installed app by name. */
 object AppTools {
-    fun all(): List<PhoneTool> = listOf(OpenApp)
+    fun all(): List<PhoneTool> = listOf(OpenApp, YoutubeSearch)
 
     private object OpenApp : PhoneTool {
         override val name = "open_app"
@@ -54,6 +54,30 @@ object AppTools {
                 ?: return Results.failed("no_launch", "${app.label} can't be opened from outside.")
             return openAndRead(host, intent, app, "Opened ${app.label}.")
                 ?: host.openApp(intent, app.label, "${app.label} will open after you speak.")
+        }
+    }
+
+    private object YoutubeSearch : PhoneTool {
+        override val name = "youtube_search"
+
+        override fun declaration() = Schema.function(
+            name,
+            "Opens YouTube straight on the search results for a name or topic and returns the screen, so you can " +
+                "carry on (open the channel or a video) with ui_click.",
+            Schema.string("query", "What to search for, as the user said it.", required = true),
+        )
+
+        override suspend fun run(args: JSONObject, host: ToolHost): JSONObject {
+            val query = args.text("query")
+            if (query.isEmpty()) return Results.failed("no_query", "Ask what to search for on YouTube.")
+            val pkg = "com.google.android.youtube"
+            val installed = runCatching { host.context.packageManager.getPackageInfo(pkg, 0) }.isSuccess
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode(query)))
+            if (installed) intent.setPackage(pkg)
+            val app = InstalledApp("YouTube", pkg)
+            val note = "Opened YouTube results for \"$query\"."
+            return (if (installed) openAndRead(host, intent, app, note) else null)
+                ?: host.openApp(intent, "YouTube", "YouTube will open with results for \"$query\" after you speak.")
         }
     }
 

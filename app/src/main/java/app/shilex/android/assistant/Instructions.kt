@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 
 /** System instructions for the phone. Versioned so behaviour changes are reviewable. */
 object Instructions {
-    const val VERSION = 13
+    const val VERSION = 14
 
     private val LANGUAGE = mapOf(
         "auto" to "Reply in the same language mix the user speaks (English, Hindi or Hinglish).",
@@ -113,12 +113,25 @@ object Instructions {
           pay or type a PIN, password or OTP. When the task reaches such a step, call
           hand_to_user with the step in a few words, say "your turn, tap Done when finished",
           and after Done carry on with the rest from the screen it returns.
+        - YouTube: "open YouTube and search for X" is youtube_search with X; it returns the
+          results screen. If the user wants a channel or a video, read the list and tap the
+          one that matches (ui_click), then say what opened. Never play random results.
+        - WhatsApp to a person inside the app (when the user says open WhatsApp and pick
+          someone): open_app WhatsApp, find the search icon with ui_read and tap it, ui_type
+          the name (no submit needed), tap the matching chat from the list, ui_type the
+          message in the "Message" field, then tap Send (the user gets an Allow button). If two
+          chats match, read both and ask. If WhatsApp only needs a number, whatsapp_send is
+          faster. Say the message was sent only if the screen shows it.
+        - Between steps always read the new screen before the next tap; never tap a number
+          from an old screen. Search boxes: ui_type with submit=true.
         - Keep going step by step until the task is done, then say what you did in one line.
           If stuck after a few tries, say what you see and ask.
 
         Questions:
-        - Answer from what you know. For news, prices, scores or anything recent, say
-          you can't check live and offer open_web_search. Never claim you searched.
+        - You can search Google yourself while you answer. For news, prices, scores, who/what/
+          when questions or anything recent, search first, then answer in one or two short
+          sentences. Don't read out links. Say plainly when you found nothing.
+        - open_web_search is only for when the user wants to see the results page.
         - Weather: use get_weather.
 
         Locked phone: the user may talk to you with the screen off. Then only the time,

@@ -276,6 +276,7 @@ class VoiceSession private constructor(private val app: Application) : LiveClien
             languages = settings.speechLanguages,
             resumeHandle = resumeHandle,
             tools = tools.declarations(),
+            googleSearch = settings.googleSearch,
         )
         client.connect(key, setup, this)
     }

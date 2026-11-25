@@ -138,6 +138,7 @@ object ScreenTools {
             "Types text into a field (replacing what's there). Doesn't send; tap Send separately.",
             Schema.string("text", "Exactly what to type, in the user's words.", required = true),
             Schema.integer("number", "Field number from ui_read; empty for the focused field."),
+            Schema.boolean("submit", "Press the keyboard's Search key after typing. Only for search boxes; never to send a message."),
         )
 
         override suspend fun run(args: JSONObject, host: ToolHost): JSONObject {
@@ -149,6 +150,13 @@ object ScreenTools {
                 ?: return Results.failed("no_field", "No text field selected. Call ui_read and give the field's number.")
             if (ControlRules.blocked(field.packageName?.toString().orEmpty())) return blocked("this app")
             if (!service.type(field, args.text("text"))) return Results.failed("type_failed", "Typing didn't work in that field.")
+            if (args.optBoolean("submit", false)) {
+                val hint = (service.labelOf(field) + " " + field.viewIdResourceName.orEmpty() + " " + field.hintText.orEmpty()).lowercase()
+                val isSearch = listOf("search", "بحث", "find", "query").any { it in hint }
+                if (!isSearch) return Results.failed("not_search", "Typed it, but Enter is only used in search boxes. Tap the Send or Search button instead.")
+                if (!service.submit(field)) return Results.failed("submit_failed", "Typed it, but Search didn't go. Tap the search suggestion or button instead.")
+                return afterAction(service, "Typed it and searched.")
+            }
             return afterAction(service, "Typed it.")
         }
     }

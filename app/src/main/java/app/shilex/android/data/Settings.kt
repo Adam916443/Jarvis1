@@ -75,6 +75,11 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("learning", true)
         set(value) = prefs.edit().putBoolean("learning", value).apply()
 
+    /** Gemini may search Google while answering (news, scores, prices). The question text goes to Google. */
+    var googleSearch: Boolean
+        get() = prefs.getBoolean("google_search", true)
+        set(value) = prefs.edit().putBoolean("google_search", value).apply()
+
     /** The first-run setup was finished (or skipped) once. */
     var onboarded: Boolean
         get() = prefs.getBoolean("onboarded", false)

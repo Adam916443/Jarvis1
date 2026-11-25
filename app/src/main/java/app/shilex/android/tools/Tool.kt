@@ -90,6 +90,9 @@ object Schema {
     fun integer(name: String, description: String, required: Boolean = false) =
         Param(name, JSONObject().put("type", "integer").put("description", description), required)
 
+    fun boolean(name: String, description: String) =
+        Param(name, JSONObject().put("type", "boolean").put("description", description), false)
+
     fun strings(name: String, description: String) = Param(
         name,
         JSONObject().put("type", "array").put("description", description)

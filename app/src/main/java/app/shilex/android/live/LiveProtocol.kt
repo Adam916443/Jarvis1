@@ -21,6 +21,8 @@ object LiveProtocol {
         val resumeHandle: String?,
         /** Function declarations (name, description, parameters) the model may call. */
         val tools: JSONArray = JSONArray(),
+        /** Let Gemini look things up on Google while it answers (grounding). */
+        val googleSearch: Boolean = false,
     )
 
     fun setupMessage(setup: Setup): String {
@@ -50,9 +52,10 @@ object LiveProtocol {
             )
             .put("inputAudioTranscription", inputTranscription)
             .apply {
-                if (setup.tools.length() > 0) {
-                    put("tools", JSONArray().put(JSONObject().put("functionDeclarations", setup.tools)))
-                }
+                val declared = JSONArray()
+                if (setup.tools.length() > 0) declared.put(JSONObject().put("functionDeclarations", setup.tools))
+                if (setup.googleSearch) declared.put(JSONObject().put("googleSearch", JSONObject()))
+                if (declared.length() > 0) put("tools", declared)
             }
             .put("outputAudioTranscription", JSONObject())
             .put("sessionResumption", resumption)
